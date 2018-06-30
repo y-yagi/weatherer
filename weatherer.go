@@ -111,7 +111,7 @@ func (w *Weatherer) Import(filename string) error {
 		if err != nil {
 			return err
 		}
-		tx.MustExec(insertQuery, area, t, t.Hour(), record[1], record[2], record[4], record[7], record[9], time.Now())
+		tx.MustExec(insertQuery, area, t, t.Hour(), record[1], record[4], record[7], record[9], time.Now())
 	}
 
 	tx.Commit()
