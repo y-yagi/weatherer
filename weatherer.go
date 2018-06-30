@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/y-yagi/goext/osext"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
@@ -37,19 +36,9 @@ INSERT INTO weathers
 `
 )
 
+// Weatherer is a weatherer module.
 type Weatherer struct {
 	database string
-}
-
-type Weather struct {
-	ID            int       `db:"id"`
-	Area          string    `db:"area"`
-	Date          time.Time `db:"date"`
-	hour          int       `db:"hour"`
-	temperature   float32   `db:"temperature"`
-	windSpeed     float32   `db:"wind_speed"`
-	windDirection string    `db:"wind_direction"`
-	CreatedAt     time.Time `db:"created_at"`
 }
 
 // NewWeatherer creates a new weatherer.

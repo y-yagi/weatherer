@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/y-yagi/configure"
 	"github.com/y-yagi/weatherer"
 )
