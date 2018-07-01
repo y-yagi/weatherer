@@ -1,15 +1,20 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/y-yagi/configure"
+	chart "github.com/y-yagi/go-chart"
 	"github.com/y-yagi/weatherer"
 )
 
@@ -40,6 +45,7 @@ func main() {
 
 func run(args []string, outStream, errStream io.Writer) (exitCode int) {
 	var importFile string
+	var date string
 	var config bool
 
 	exitCode = 0
@@ -48,6 +54,7 @@ func run(args []string, outStream, errStream io.Writer) (exitCode int) {
 	flags.SetOutput(errStream)
 	flags.StringVar(&importFile, "i", "", "Import file.")
 	flags.BoolVar(&config, "c", false, "Edit config.")
+	flags.StringVar(&date, "s", "", "Show chart.")
 	flags.Parse(args[1:])
 
 	if config {
@@ -79,6 +86,13 @@ func run(args []string, outStream, errStream io.Writer) (exitCode int) {
 			return
 		}
 		return
+	} else if len(date) != 0 {
+		if err = drawChart(we, date); err != nil {
+			fmt.Fprintf(errStream, "Error: %v\n", err)
+			exitCode = 1
+			return
+		}
+		return
 	}
 
 	cmd := exec.Command("sqlite3", cfg.DataBase)
@@ -91,4 +105,84 @@ func run(args []string, outStream, errStream io.Writer) (exitCode int) {
 		return
 	}
 	return
+}
+
+func drawChart(we *weatherer.Weatherer, date string) error {
+	format := "2006/01/02"
+	start, err := time.Parse(format, date)
+	if err != nil {
+		return err
+	}
+
+	end := start.Add(time.Hour * 23)
+
+	weathers, err := we.SelectWeathers(start, end)
+	if err != nil {
+		return err
+	}
+
+	if len(weathers) == 0 {
+		return errors.New("no data for the specified date")
+	}
+	var xvalues []float64
+	var yvalues []float64
+
+	for _, weather := range weathers {
+		xvalues = append(xvalues, float64(weather.Hour))
+		yvalues = append(yvalues, weather.Temperature)
+	}
+
+	graph := chart.Chart{
+		XAxis: chart.XAxis{
+			Name:      "Hour",
+			NameStyle: chart.StyleShow(),
+			Style:     chart.StyleShow(),
+		},
+		YAxis: chart.YAxis{
+			Name:      "Temperature",
+			NameStyle: chart.StyleShow(),
+			Style:     chart.StyleShow(),
+			Range:     &chart.ContinuousRange{Min: 0.0, Max: 40.0},
+		},
+		Series: []chart.Series{
+			chart.ContinuousSeries{
+				Style: chart.Style{
+					Show: true,
+				},
+				XValues: xvalues,
+				YValues: yvalues,
+			},
+		},
+	}
+
+	tmpfile, err := ioutil.TempFile("", "weatherer-")
+	if err != nil {
+		return nil
+	}
+
+	err = graph.Render(chart.PNG, tmpfile)
+	if err != nil {
+		return nil
+	}
+	tmpfile.Close()
+
+	defer os.Remove(tmpfile.Name())
+	cmd := exec.Command(openCommand(), tmpfile.Name())
+	cmd.Start()
+	time.Sleep(1 * time.Second) // NOTE: wait for open file
+
+	return nil
+}
+
+func openCommand() string {
+	command := ""
+	os := runtime.GOOS
+
+	if os == "linux" {
+		command = "gnome-open"
+	} else if os == "darwin" {
+		command = "open"
+	}
+
+	return command
 }

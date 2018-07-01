@@ -34,11 +34,22 @@ INSERT INTO weathers
 	VALUES
 	($1, $2, $3, $4, $5, $6, $7, $8)
 `
+
+	selectQuery = `
+SELECT id, temperature, hour FROM weathers WHERE date BETWEEN $1 AND $2 ORDER BY date
+`
 )
 
 // Weatherer is a weatherer module.
 type Weatherer struct {
 	database string
+}
+
+// Weather is type for `weathers` table
+type Weather struct {
+	ID          int     `db:"id"`
+	Hour        int     `db:"hour"`
+	Temperature float64 `db:"temperature"`
 }
 
 // NewWeatherer creates a new weatherer.
@@ -105,4 +116,20 @@ func (w *Weatherer) Import(filename string) error {
 
 	tx.Commit()
 	return nil
+}
+
+func (w *Weatherer) SelectWeathers(start time.Time, end time.Time) ([]Weather, error) {
+	db, err := sqlx.Connect("sqlite3", w.database)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	weathers := []Weather{}
+	err = db.Select(&weathers, selectQuery, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	return weathers, nil
 }
