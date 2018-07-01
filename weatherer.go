@@ -36,7 +36,7 @@ INSERT INTO weathers
 `
 
 	selectQuery = `
-SELECT id, temperature, hour FROM weathers WHERE date BETWEEN $1 AND $2 ORDER BY date
+SELECT id, date, hour, temperature FROM weathers WHERE date BETWEEN $1 AND $2 ORDER BY date
 `
 )
 
@@ -47,9 +47,10 @@ type Weatherer struct {
 
 // Weather is type for `weathers` table
 type Weather struct {
-	ID          int     `db:"id"`
-	Hour        int     `db:"hour"`
-	Temperature float64 `db:"temperature"`
+	ID          int       `db:"id"`
+	Date        time.Time `db:"date"`
+	Hour        int       `db:"hour"`
+	Temperature float64   `db:"temperature"`
 }
 
 // NewWeatherer creates a new weatherer.

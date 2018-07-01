@@ -13,8 +13,9 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	chart "github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/util"
 	"github.com/y-yagi/configure"
-	chart "github.com/y-yagi/go-chart"
 	"github.com/y-yagi/weatherer"
 )
 
@@ -128,15 +129,16 @@ func drawChart(we *weatherer.Weatherer, date string) error {
 	var yvalues []float64
 
 	for _, weather := range weathers {
-		xvalues = append(xvalues, float64(weather.Hour))
+		xvalues = append(xvalues, util.Time.ToFloat64(weather.Date))
 		yvalues = append(yvalues, weather.Temperature)
 	}
 
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
-			Name:      date,
-			NameStyle: chart.StyleShow(),
-			Style:     chart.StyleShow(),
+			Name:           date,
+			NameStyle:      chart.StyleShow(),
+			Style:          chart.StyleShow(),
+			ValueFormatter: chart.TimeHourValueFormatter,
 		},
 		YAxis: chart.YAxis{
 			Name:      "Temperature",
