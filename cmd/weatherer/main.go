@@ -134,7 +134,7 @@ func drawChart(we *weatherer.Weatherer, date string) error {
 
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
-			Name:      "Hour",
+			Name:      date,
 			NameStyle: chart.StyleShow(),
 			Style:     chart.StyleShow(),
 		},
