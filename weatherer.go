@@ -103,12 +103,13 @@ func (w *Weatherer) Import(filename string) error {
 	}
 
 	format := "2006/1/2 15:04:05"
+	loc, _ := time.LoadLocation("Asia/Tokyo")
 	_, filename = filepath.Split(filename)
 	area := strings.Split(filename, "_")[0]
 
 	tx := db.MustBegin()
 	for _, record := range records[headerLines:] {
-		t, err := time.Parse(format, record[0])
+		t, err := time.ParseInLocation(format, record[0], loc)
 		if err != nil {
 			return err
 		}
