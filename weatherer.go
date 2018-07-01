@@ -120,6 +120,7 @@ func (w *Weatherer) Import(filename string) error {
 	return nil
 }
 
+// SelectWeathers select weathers from database
 func (w *Weatherer) SelectWeathers(start time.Time, end time.Time) ([]Weather, error) {
 	db, err := sqlx.Connect("sqlite3", w.database)
 	if err != nil {
