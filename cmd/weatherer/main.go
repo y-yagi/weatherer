@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -157,21 +156,19 @@ func drawChart(we *weatherer.Weatherer, date string) error {
 		},
 	}
 
-	tmpfile, err := ioutil.TempFile("", "weatherer-")
+	f, err := os.OpenFile("/tmp/weatherer-graph", os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return nil
 	}
 
-	err = graph.Render(chart.PNG, tmpfile)
+	err = graph.Render(chart.PNG, f)
 	if err != nil {
 		return nil
 	}
-	tmpfile.Close()
+	f.Close()
 
-	defer os.Remove(tmpfile.Name())
-	cmd := exec.Command(openCommand(), tmpfile.Name())
+	cmd := exec.Command(openCommand(), f.Name())
 	cmd.Start()
-	time.Sleep(1 * time.Second) // NOTE: wait for open file
 
 	return nil
 }
